@@ -3,7 +3,7 @@
 # o se pide con getpass.
 
 estudiante:
-  numero: 99                 # <-- su número de lista N (lo-ssh-N, 10.253.0.N/32)
+  numero: 12                 # <-- su número de lista N (lo-ssh-N, 10.253.0.N/32)
   nombre: "Manuel Miranda"           # <-- va en el comentario de sus objetos
 
 equipos:
