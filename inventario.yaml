@@ -1,0 +1,21 @@
+# Inventario del Laboratorio 1 — SIN contraseñas.
+# La clave de cada equipo se lee de LAB_PASS_<NOMBRE> (ej. mt-lab -> LAB_PASS_MT_LAB)
+# o se pide con getpass.
+
+estudiante:
+  numero: 99                 # <-- su número de lista N (lo-ssh-N, 10.253.0.N/32)
+  nombre: "Manuel Miranda"           # <-- va en el comentario de sus objetos
+
+equipos:
+  - nombre: mt-lab
+    host: 10.60.30.202
+    device_type: mikrotik_routeros
+    usuario: lab-ssh
+    rol: escritura
+
+  # Extra multivendor: Cisco IOS 3725 (solo lectura)
+  - nombre: cisco-lab
+    host: 10.60.30.203
+    device_type: cisco_ios
+    usuario: lab-ssh
+    rol: lectura

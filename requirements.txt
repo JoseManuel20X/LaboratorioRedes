@@ -1,0 +1,5 @@
+netmiko>=4.7.0
+pyyaml>=6.0
+# IOS 12.4 (Cisco 3725) solo ofrece diffie-hellman-group1-sha1 + ssh-rsa;
+# paramiko 4+ los eliminó.
+paramiko>=3.4,<4
