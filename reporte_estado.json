@@ -1,16 +1,16 @@
 {
-  "generado": "2026-10-20T12:27:34",
+  "generado": "2026-10-20T12:27:49",
   "equipos": [
     {
       "nombre": "mt-lab",
       "host": "10.60.30.202",
       "device_type": "mikrotik_routeros",
       "rol": "escritura",
-      "fecha": "2026-10-20T12:27:30",
+      "fecha": "2026-10-20T12:27:45",
       "estado": "ok",
       "datos": {
         "identidad": "MT-Lab1",
-        "uptime": "5m59s",
+        "uptime": "6m14s",
         "version": "7.24.4 (stable)",
         "interfaces": [
           {
@@ -22,6 +22,11 @@
             "interfaz": "ether2",
             "ip": "192.168.20.1/24",
             "comentario": "lan-pc2"
+          },
+          {
+            "interfaz": "lo-ssh-12",
+            "ip": "10.253.0.12/32",
+            "comentario": "Lab1 Manuel Miranda"
           }
         ],
         "gateway": "10.60.30.1"
@@ -29,8 +34,7 @@
       "cambio": {
         "objeto": "lo-ssh-12 10.253.0.12/32",
         "acciones": [
-          "creado bridge lo-ssh-12",
-          "asignada 10.253.0.12/32 a lo-ssh-12"
+          "sin cambios"
         ],
         "verificado": true
       }
@@ -40,7 +44,7 @@
       "host": "10.60.30.203",
       "device_type": "cisco_ios",
       "rol": "lectura",
-      "fecha": "2026-10-20T12:27:31",
+      "fecha": "2026-10-20T12:27:46",
       "estado": "ok",
       "datos": {
         "identidad": "CISCO-Lab1",
