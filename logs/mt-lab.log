@@ -4168,7 +4168,7 @@ MT-Lab1
 
 [lab-ssh@MT-Lab1] > /system resource print
 
-                   uptime: 6m14s                                     
+                   uptime: 6m26s                                     
                   version: 7.24.4 (stable)                           
                build-time: 2026-09-16 11:32:21                       
           minimum-version: 7.1                                       
@@ -4177,11 +4177,11 @@ MT-Lab1
                       cpu: QEMU                                      
                 cpu-count: 1                                         
             cpu-frequency: 2611MHz                                   
-                 cpu-load: 3%                                        
+                 cpu-load: 0%                                        
            free-hdd-space: 69.1MiB                                   
           total-hdd-space: 89.2MiB                                   
-  write-sect-since-reboot: 1632                                      
-         write-sect-total: 1632                                      
+  write-sect-since-reboot: 1664                                      
+         write-sect-total: 1664                                      
         architecture-name: x86_64                                    
                board-name: CHR QEMU Standard PC (i440FX + PIIX, 1996)
                  platform: MikroTik                                  
@@ -4249,75 +4249,91 @@ MT-Lab1
 
 
 
-[lab-ssh@MT-Lab1] > /interface bridge print terse where name="lo-ssh-12"
-
-0 R comment=Lab1 Manuel Miranda name=lo-ssh-12 mtu=auto actual-mtu=1500 l2mtu=65535 arp=enabled arp-timeout=auto mac-address=A6:D6:D9:3B:3F:E5 protocol-mode=none fast-forward=yes igmp-snooping=no auto-mac=yes ageing-time=5m vlan-filtering=no dhcp-snooping=no dhcpv6-snooping=no ra-guard=no port-cost-mode=long forward-reserved-addresses=no max-learned-entries=auto mlag-peer-port=none mlag-priority=128 mlag-heartbeat=5s
-
-
-
-
-[lab-ssh@MT-Lab1] > 
-
-
-
-
-[lab-ssh@MT-Lab1] > 
-
-
-
-
-[lab-ssh@MT-Lab1] > 
-
-
-
-
-[lab-ssh@MT-Lab1] > /ip address print terse where address="10.253.0.12/32"
-
-2 comment=Lab1 Manuel Miranda address=10.253.0.12/32 network=10.253.0.12 interface=lo-ssh-12 actual-interface=lo-ssh-12 vrf=main
-
-
-
-
-[lab-ssh@MT-Lab1] > 
-
-
-
-
-[lab-ssh@MT-Lab1] > 
-
-
-
-
-[lab-ssh@MT-Lab1] > 
-
-
-
-
-[lab-ssh@MT-Lab1] > /interface bridge print terse where name="lo-ssh-12"
-
-0 R comment=Lab1 Manuel Miranda name=lo-ssh-12 mtu=auto actual-mtu=1500 l2mtu=65535 arp=enabled arp-timeout=auto mac-address=A6:D6:D9:3B:3F:E5 protocol-mode=none fast-forward=yes igmp-snooping=no auto-mac=yes ageing-time=5m vlan-filtering=no dhcp-snooping=no dhcpv6-snooping=no ra-guard=no port-cost-mode=long forward-reserved-addresses=no max-learned-entries=auto mlag-peer-port=none mlag-priority=128 mlag-heartbeat=5s
-
-
-
-
-[lab-ssh@MT-Lab1] > 
-
-
-
-
-[lab-ssh@MT-Lab1] > 
-
-
-
-
-[lab-ssh@MT-Lab1] > 
-
-
-
-
 [lab-ssh@MT-Lab1] > /ip address print terse where address="10.253.0.12/32" and interface="lo-ssh-12"
 
 2 comment=Lab1 Manuel Miranda address=10.253.0.12/32 network=10.253.0.12 interface=lo-ssh-12 actual-interface=lo-ssh-12 vrf=main
+
+
+
+
+[lab-ssh@MT-Lab1] > 
+
+
+
+
+[lab-ssh@MT-Lab1] > 
+
+
+
+
+[lab-ssh@MT-Lab1] > 
+
+
+
+
+[lab-ssh@MT-Lab1] > /ip address remove [find address="10.253.0.12/32" and interface="lo-ssh-12"]
+
+
+
+
+[lab-ssh@MT-Lab1] > 
+
+
+
+
+[lab-ssh@MT-Lab1] > 
+
+
+
+
+[lab-ssh@MT-Lab1] > 
+
+
+
+
+[lab-ssh@MT-Lab1] > /interface bridge print terse where name="lo-ssh-12"
+
+0 R comment=Lab1 Manuel Miranda name=lo-ssh-12 mtu=auto actual-mtu=1500 l2mtu=65535 arp=enabled arp-timeout=auto mac-address=A6:D6:D9:3B:3F:E5 protocol-mode=none fast-forward=yes igmp-snooping=no auto-mac=yes ageing-time=5m vlan-filtering=no dhcp-snooping=no dhcpv6-snooping=no ra-guard=no port-cost-mode=long forward-reserved-addresses=no max-learned-entries=auto mlag-peer-port=none mlag-priority=128 mlag-heartbeat=5s
+
+
+
+
+[lab-ssh@MT-Lab1] > 
+
+
+
+
+[lab-ssh@MT-Lab1] > 
+
+
+
+
+[lab-ssh@MT-Lab1] > 
+
+
+
+
+[lab-ssh@MT-Lab1] > /interface bridge remove [find name="lo-ssh-12"]
+
+
+
+
+[lab-ssh@MT-Lab1] > 
+
+
+
+
+[lab-ssh@MT-Lab1] > 
+
+
+
+
+[lab-ssh@MT-Lab1] > 
+
+
+
+
+[lab-ssh@MT-Lab1] > /interface bridge print terse where name="lo-ssh-12"
 
 
 

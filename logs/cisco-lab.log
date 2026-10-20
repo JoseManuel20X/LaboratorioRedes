@@ -8,15 +8,14 @@ CISCO-Lab1#
 CISCO-Lab1#show running-config | include hostname
 hostname CISCO-Lab1
 CISCO-Lab1#
+CISCO-Lab1#
 CISCO-Lab1#show version | include uptime
 CISCO-Lab1 uptime is 31 minutes
-CISCO-Lab1#
 CISCO-Lab1#
 CISCO-Lab1#show ip interface brief
 Interface                  IP-Address      OK? Method Status                Protocol
 FastEthernet0/0            10.60.30.203    YES NVRAM  up                    up      
 FastEthernet0/1            192.168.10.1    YES NVRAM  up                    up      
-CISCO-Lab1#
 CISCO-Lab1#
 CISCO-Lab1#show ip route 0.0.0.0
 Routing entry for 0.0.0.0/0, supernet
