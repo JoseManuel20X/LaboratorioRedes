@@ -65,8 +65,16 @@ Réplica del escenario en el proyecto `Lab1` de GNS3:
 - MikroTik CHR 7.24.4: `ether1` 10.60.30.202/24, `ether2` 192.168.20.1/24 (PC2 192.168.20.10)
 - Cisco 3725: `Fa0/0` 10.60.30.203/24, `Fa0/1` 192.168.10.1/24 (PC1 192.168.10.10)
 
+Las ejecuciones de `reporte_estado.json` y `logs/` se hicieron sobre esta réplica local (red `tap0`),
+no sobre el laboratorio compartido por Tailscale.
+
 ## Declaración de uso de IA
 
 Se usó Claude (Anthropic) como asistente para montar la topología de GNS3, para la estructura inicial
 del script y los parsers, y para depurar el filtro de RouterOS y la compatibilidad SSH con IOS 12.4.
-El código fue revisado y probado por el estudiante.
+
+También se usó para diagnosticar por qué la última ejecución subida fallaba (autenticación rechazada
+y logs vacíos), recuperar el MikroTik de la réplica local, que había quedado con una contraseña
+desconocida (se le cargó un disco limpio y se reconfiguró), restablecer la clave de `lab-ssh` en el
+Cisco y generar las ejecuciones de evidencia (creación, segunda ejecución sin cambios, `--limpiar` y
+ejecución final). El código del script no se modificó en esa etapa. Todo fue revisado por el estudiante.
