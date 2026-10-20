@@ -8,9 +8,10 @@ CISCO-Lab1#
 CISCO-Lab1#show running-config | include hostname
 hostname CISCO-Lab1
 CISCO-Lab1#
-CISCO-Lab1#
 CISCO-Lab1#show version | include uptime
 CISCO-Lab1 uptime is 31 minutes
+CISCO-Lab1#
+CISCO-Lab1#
 CISCO-Lab1#
 CISCO-Lab1#show ip interface brief
 Interface                  IP-Address      OK? Method Status                Protocol
