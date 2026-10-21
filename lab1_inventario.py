@@ -13,19 +13,26 @@ FLUJO:
   3. En equipos con rol 'escritura' asegura lo-ssh-<N> con 10.253.0.<N>/32
      sin duplicar nada (R6). Con --limpiar elimina solo esos objetos.
   4. Escribe reporte_estado.json y muestra una tabla resumen (R5).
+  Con --rest los MikroTik usan la API REST de RouterOS (http://<host>/rest) en
+  lugar de SSH; el Cisco (IOS 12.4, sin REST) sigue por Netmiko.
 
 USO:
     export LAB_PASS_MT_LAB='...'          # opcional; si no, se pide con getpass
     python lab1_inventario.py             # estado + cambio idempotente
     python lab1_inventario.py --limpiar   # elimina solo mis objetos
+    python lab1_inventario.py --rest      # lo mismo, MikroTik por API REST
 ================================================================================
 """
 
 import argparse
+import base64
 import getpass
 import json
 import os
 import re
+import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 
@@ -195,9 +202,122 @@ def limpiar_loopback(conn, numero):
 
 
 # ==============================================================================
+# --rest. MISMO FLUJO POR LA API REST DE RouterOS (servicio www)
+# ==============================================================================
+class ErrorAutenticacion(Exception):
+    pass
+
+
+class RestMikrotik:
+    """Cliente mínimo de http://<host>/rest con autenticación básica."""
+
+    def __init__(self, host, usuario, clave, puerto=80, log=None):
+        self.base = f"http://{host}:{puerto}/rest"
+        token = base64.b64encode(f"{usuario}:{clave}".encode()).decode()
+        self.headers = {"Authorization": f"Basic {token}", "Content-Type": "application/json"}
+        self.log = log
+
+    def llamar(self, metodo, ruta, filtro=None, datos=None):
+        url = self.base + ruta + ("?" + urllib.parse.urlencode(filtro) if filtro else "")
+        cuerpo = json.dumps(datos).encode() if datos is not None else None
+        req = urllib.request.Request(url, data=cuerpo, headers=self.headers, method=metodo)
+        try:
+            with urllib.request.urlopen(req, timeout=15) as r:
+                codigo, texto = r.status, r.read()
+        except urllib.error.HTTPError as e:
+            codigo, texto = e.code, e.read()
+            if e.code == 401:
+                raise ErrorAutenticacion() from e
+            detalle = json.loads(texto or b"{}")
+            raise RuntimeError(f"REST {e.code} en {metodo} {ruta}: {detalle.get('detail') or detalle.get('message')}") from e
+        finally:
+            if self.log:
+                with open(self.log, "a", encoding="utf-8") as f:
+                    f.write(f"{datetime.now().isoformat(timespec='seconds')} {metodo} {url} "
+                            f"{json.dumps(datos, ensure_ascii=False) if datos else ''}\n")
+        return json.loads(texto) if texto else None
+
+    def get(self, ruta, **filtro):
+        return self.llamar("GET", ruta, filtro)
+
+
+def estado_mikrotik_rest(api):
+    recursos = api.get("/system/resource")
+    rutas = api.get("/ip/route", **{"dst-address": "0.0.0.0/0"})
+    return {
+        "identidad": api.get("/system/identity")["name"],
+        "uptime": recursos.get("uptime"),
+        "version": recursos.get("version"),
+        "interfaces": [
+            {"interfaz": r.get("interface"), "ip": r.get("address"), "comentario": r.get("comment", "")}
+            for r in api.get("/ip/address")
+        ],
+        "gateway": rutas[0].get("gateway") if rutas else None,
+    }
+
+
+def asegurar_loopback_rest(api, numero, nombre_est):
+    """Igual que asegurar_loopback, pero con GET/PUT/PATCH sobre /rest."""
+    bridge, ip = f"lo-ssh-{numero}", f"10.253.0.{numero}/32"
+    comentario = f"Lab1 {nombre_est}"
+    acciones = []
+
+    existe = api.get("/interface/bridge", name=bridge)
+    if not existe:
+        api.llamar("PUT", "/interface/bridge", datos={"name": bridge, "protocol-mode": "none", "comment": comentario})
+        acciones.append(f"creado bridge {bridge}")
+    elif existe[0].get("comment") != comentario:
+        api.llamar("PATCH", f"/interface/bridge/{existe[0]['.id']}", datos={"comment": comentario})
+        acciones.append(f"comentario de {bridge} actualizado")
+
+    ips = api.get("/ip/address", address=ip)
+    if not ips:
+        api.llamar("PUT", "/ip/address", datos={"address": ip, "interface": bridge, "comment": comentario})
+        acciones.append(f"asignada {ip} a {bridge}")
+    elif ips[0].get("interface") != bridge:
+        raise RuntimeError(f"{ip} ya existe en {ips[0].get('interface')}; no se modifica")
+
+    verificado = bool(api.get("/interface/bridge", name=bridge) and api.get("/ip/address", address=ip, interface=bridge))
+    return {"objeto": f"{bridge} {ip}", "acciones": acciones or ["sin cambios"], "verificado": verificado}
+
+
+def limpiar_loopback_rest(api, numero):
+    """Igual que limpiar_loopback: DELETE por .id, filtrando por nombre e IP propios."""
+    bridge, ip = f"lo-ssh-{numero}", f"10.253.0.{numero}/32"
+    acciones = []
+    for r in api.get("/ip/address", address=ip, interface=bridge):
+        api.llamar("DELETE", f"/ip/address/{r['.id']}")
+        acciones.append(f"eliminada {ip}")
+    for r in api.get("/interface/bridge", name=bridge):
+        api.llamar("DELETE", f"/interface/bridge/{r['.id']}")
+        acciones.append(f"eliminado bridge {bridge}")
+    quedan = api.get("/interface/bridge", name=bridge)
+    return {"objeto": f"{bridge} {ip}", "acciones": acciones or ["sin cambios"], "verificado": not quedan}
+
+
+def procesar_mikrotik_rest(eq, estudiante, limpiar, resultado):
+    api = RestMikrotik(eq["host"], eq["usuario"], obtener_clave(eq["nombre"], eq["usuario"]),
+                       eq.get("puerto_rest", 80), LOGS / f"{eq['nombre']}-rest.log")
+    try:
+        resultado["datos"] = estado_mikrotik_rest(api)
+        if eq["rol"] == "escritura":
+            if limpiar:
+                resultado["cambio"] = limpiar_loopback_rest(api, estudiante["numero"])
+            else:
+                resultado["cambio"] = asegurar_loopback_rest(api, estudiante["numero"], estudiante["nombre"])
+    except ErrorAutenticacion:
+        resultado["estado"] = f"error: autenticación rechazada para '{eq['usuario']}'"
+    except (urllib.error.URLError, TimeoutError) as e:
+        resultado["estado"] = f"error: REST no responde en {eq['host']} ({getattr(e, 'reason', e)})"
+    except Exception as e:
+        resultado["estado"] = f"error: {e}"
+    return resultado
+
+
+# ==============================================================================
 # R3. PROCESAR UN EQUIPO (conexión robusta)
 # ==============================================================================
-def procesar_equipo(eq, estudiante, limpiar):
+def procesar_equipo(eq, estudiante, limpiar, rest=False):
     resultado = {
         "nombre": eq["nombre"],
         "host": eq["host"],
@@ -208,6 +328,10 @@ def procesar_equipo(eq, estudiante, limpiar):
         "datos": None,
         "cambio": None,
     }
+    if rest and eq["device_type"] == "mikrotik_routeros":
+        resultado["acceso"] = "rest"
+        return procesar_mikrotik_rest(eq, estudiante, limpiar, resultado)
+    resultado["acceso"] = "ssh"
     dispositivo = {
         "device_type": eq["device_type"],
         "host": eq["host"],
@@ -258,6 +382,7 @@ def imprimir_tabla(resultados):
 def main():
     parser = argparse.ArgumentParser(description="Lab 1: inventario, estado y cambio idempotente")
     parser.add_argument("--limpiar", action="store_true", help="elimina solo lo-ssh-<N> y su IP")
+    parser.add_argument("--rest", action="store_true", help="MikroTik por API REST (http://<host>/rest) en vez de SSH")
     parser.add_argument("-i", "--inventario", default=INVENTARIO, help="ruta del inventario YAML")
     args = parser.parse_args()
 
@@ -265,8 +390,9 @@ def main():
     inv = cargar_inventario(args.inventario)
     resultados = []
     for eq in inv["equipos"]:
-        print(f"[*] Procesando {eq['nombre']} ({eq['host']})...")
-        resultados.append(procesar_equipo(eq, inv["estudiante"], args.limpiar))
+        via = "REST" if args.rest and eq["device_type"] == "mikrotik_routeros" else "SSH"
+        print(f"[*] Procesando {eq['nombre']} ({eq['host']}) por {via}...")
+        resultados.append(procesar_equipo(eq, inv["estudiante"], args.limpiar, args.rest))
 
     with open(REPORTE, "w", encoding="utf-8") as f:
         json.dump({"generado": datetime.now().isoformat(timespec="seconds"), "equipos": resultados},
